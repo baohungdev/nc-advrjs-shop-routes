@@ -3,14 +3,17 @@ import useSWR from "swr";
 
 import Link from "next/link";
 
-const fetcher = (url) => fetch(url).then((res) => res.json());
-
-export default function Home() {
-  const { data, error } = useSWR(
-    "https://min-shop.herokuapp.com/rest/product",
-    fetcher
-  );
-  if (error) return <div>Failed to load</div>;
+export async function getStaticProps() {
+  const res = await fetch("https://min-shop.herokuapp.com/rest/product");
+  const data = await res.json();
+  return {
+    props: {
+      data,
+    },
+  };
+}
+export default function Home(props) {
+  const { data } = props;
   if (!data) return <div>Loading...</div>;
   return (
     <div className="container">

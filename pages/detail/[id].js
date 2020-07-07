@@ -1,23 +1,28 @@
-import { useRouter } from "next/router";
-import useSWR from "swr";
 import ReactHtmlParser from "react-html-parser";
-const fetcher = async (url) => {
-  const res = await fetch(url);
-  const data = await res.json();
 
-  if (res.status !== 200) {
-    throw new Error(data.message);
-  }
-  return data;
-};
+export async function getStaticPaths() {
+  const res = await fetch("https://min-shop.herokuapp.com/rest/product");
+  const products = await res.json();
+  const paths = products.data.map((product) => ({
+    params: { id: product.id },
+  }));
+  return { paths, fallback: false };
+}
+1;
 
-export default function Person() {
-  const { query } = useRouter();
-  const { data, error } = useSWR(
-    () => query.id && `https://min-shop.herokuapp.com/rest/product/${query.id}`,
-    fetcher
+export async function getStaticProps({ params }) {
+  const res = await fetch(
+    `https://min-shop.herokuapp.com/rest/product/${params.id}`
   );
-  if (error) return <div>{error.message}</div>;
+  const data = await res.json();
+  return {
+    props: {
+      data,
+    },
+  };
+}
+
+export default function Person({ data }) {
   if (!data) return <div>Loading...</div>;
 
   return (
