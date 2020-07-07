@@ -1,45 +1,37 @@
-import Head from "next/head";
+import { useRouter } from "next/router";
 import useSWR from "swr";
+import ReactHtmlParser from "react-html-parser";
+const fetcher = async (url) => {
+  const res = await fetch(url);
+  const data = await res.json();
 
-import Link from "next/link";
+  if (res.status !== 200) {
+    throw new Error(data.message);
+  }
+  return data;
+};
 
-const fetcher = (url) => fetch(url).then((res) => res.json());
-
-export default function Home() {
+export default function Person() {
+  const { query } = useRouter();
   const { data, error } = useSWR(
-    "https://min-shop.herokuapp.com/rest/product",
+    () => query.id && `https://min-shop.herokuapp.com/rest/product/${query.id}`,
     fetcher
   );
-  if (error) return <div>Failed to load</div>;
+  if (error) return <div>{error.message}</div>;
   if (!data) return <div>Loading...</div>;
+
   return (
     <div className="container">
-      <div className="grid">
-        {data.data.map((product, i) => (
-          <div className="card" key={i}>
-            <h3 className="description">{product.name}</h3>
-            <img src={product.image} />
-            <br />
-            <Link href="/detail/[id]" as={`/detail/${product.id}`}>
-              <div className="card-button card">
-                <h3 className="description">View</h3>
-              </div>
-            </Link>
-          </div>
-        ))}
+      <a href="/">
+        <h3>Trang chủ</h3>
+      </a>
+      <div className="card">
+        <h3>{data.name}</h3>
+        ID: {data.id}
       </div>
-
-      <footer>
-        <a
-          href="https://vercel.com?utm_source=create-next-app&utm_medium=default-template&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Powered by{" "}
-          <img src="/vercel.svg" alt="Vercel Logo" className="logo" />
-        </a>
-      </footer>
-
+      <div className="card">
+        <div> {ReactHtmlParser(data.description)} </div>
+      </div>
       <style jsx>{`
         .container {
           min-height: 100vh;
@@ -158,7 +150,7 @@ export default function Home() {
         .card:hover,
         .card:focus,
         .card:active {
-          color: #0070f3;
+          color: red;
           border-color: #0070f3;
         }
 
